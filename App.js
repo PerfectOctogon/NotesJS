@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import 'react-native-reanimated';
 import { Provider } from 'react-redux';
@@ -15,11 +15,25 @@ const Stack = createNativeStackNavigator();
 
 //This is the note object. Can be added dynamically
 const Note = ({item, nav}) => {
+
+  titleCalculator = () => {
+    if(item.title.length >= 8){
+      return item.title.substring(0, 8) + "..."
+    }
+    return item.title
+  }
+
+  contentCalculator = () => {
+    if(item.content.length >= 8){
+      return item.content.substring(0, 8) + "..."
+    }
+    return item.content
+  }
   return (
     <TouchableOpacity onPress={() => {nav.navigate('Details', {note : item});}} style = {[tw`w-1/3 aspect-square mb-1 mr-1 p-5 rounded-lg bg-[#2F0082]`]}>
       <View>
-        <Text style={tw`text-white text-4 font-bold pb-1`}>{item.title.substring(0, 8) + "..."}</Text>
-        <Text style={tw`text-white`}>{item.content.substring(0,30) + "..."}</Text>
+        <Text style={tw`text-white text-4 font-bold pb-1`}>{titleCalculator()}</Text>
+        <Text style={tw`text-white`}>{contentCalculator()}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -27,10 +41,17 @@ const Note = ({item, nav}) => {
 
 // HomeScreen component handles the main functionality of adding, searching, and displaying notes
 function HomeScreen({route, navigation}){
-  const [addNote] = useAddNoteMutation();
+  const [addNote, {data : addNoteData}] = useAddNoteMutation();
   const {data, error, isLoading} = useFetchNotesQuery();
   const [text, setText] = useState("");
   const {data : filteredData, isLoading : searchNotesLoading} = useSearchNotesQuery(""+text);
+
+  useEffect(() => {
+    if(addNoteData != undefined){
+      navigation.navigate('Details', {note : addNoteData});
+      console.log(addNoteData);
+    }
+  }, [addNoteData])
   
   if(isLoading || searchNotesLoading){
     return(
@@ -96,17 +117,27 @@ function DetailsScreen({route, navigation}){
   }, [navigation]);
 
   saveNote = () => {
-    updateNote({id : note.id, content : text, title : title});
+    //updateNote({id : note.id, content : text, title : title});
     navigation.popToTop();
+  }
+
+  updateContent = (text) => {
+    setText(text);
+    updateNote({id : note.id, content : text, title : title});
+  }
+
+  updateTitle = (text) => {
+    setTitle(title)
+    updateNote({id : note.id, content : note.content, title : text});
   }
 
 
   return(
     <ScrollView style={tw`flex-1 bg-[#2F0082] p-2 h-screen`} automaticallyAdjustKeyboardInsets={true}>
-      <TextInput style={tw`text-white bg-[#3d00a9]  w-full text-6 mb-5`} multiline={true} onChangeText={text => setTitle(text)} placeholder='Type here'>{note.title}</TextInput>
-      <TextInput style={tw`text-white bg-[#3d00a9] w-full`} multiline={true} onChangeText={text => setText(text)} placeholder='Type here'>{note.content}</TextInput>
+      <TextInput style={tw`text-white bg-[#3d00a9]  w-full text-6 mb-5`} multiline={true} onChangeText={text => updateTitle(text)} placeholder='Type here'>{note.title}</TextInput>
+      <TextInput style={tw`text-white bg-[#3d00a9] w-full`} multiline={true} onChangeText={text => updateContent(text)} placeholder='Type here'>{note.content}</TextInput>
       <TouchableOpacity style={tw`items-center pt-5`} onPress={saveNote}>
-        <Text style={tw`font-bold text-white`}>SAVE NOTE</Text>
+        <Text style={tw`font-bold text-white`}>DONE</Text>
       </TouchableOpacity>
     </ScrollView>
   );
