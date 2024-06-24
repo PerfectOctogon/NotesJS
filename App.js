@@ -1,8 +1,9 @@
+import MasonryList from '@react-native-seoul/masonry-list';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import 'react-native-reanimated';
 import { Provider } from 'react-redux';
 import tw, { useDeviceContext } from 'twrnc';
@@ -17,20 +18,20 @@ const Stack = createNativeStackNavigator();
 const Note = ({item, nav}) => {
 
   titleCalculator = () => {
-    if(item.title.length >= 8){
-      return item.title.substring(0, 8) + "..."
+    if(item.title.length >= 40){
+      return item.title.substring(0, 70) + "..."
     }
     return item.title
   }
 
   contentCalculator = () => {
-    if(item.content.length >= 8){
-      return item.content.substring(0, 8) + "..."
+    if(item.content.length >=40){
+      return item.content.substring(0, 256) + "..."
     }
     return item.content
   }
   return (
-    <TouchableOpacity onPress={() => {nav.navigate('Details', {note : item});}} style = {[tw`w-1/3 aspect-square mb-1 mr-1 p-5 rounded-lg bg-[#2F0082]`]}>
+    <TouchableOpacity onPress={() => {nav.navigate('Details', {note : item});}} style = {[tw`m-1 p-5 rounded-lg bg-[#2F0082]`]}>
       <View>
         <Text style={tw`text-white text-4 font-bold pb-1`}>{titleCalculator()}</Text>
         <Text style={tw`text-white`}>{contentCalculator()}</Text>
@@ -75,12 +76,12 @@ function HomeScreen({route, navigation}){
         <Text style={tw`justify-center text-white font-bold pb-3 pt-5`}>Search/Quick add</Text>
         <TextInput style={tw`w-4/5 h-6 bg-[#2F0082] text-white`} placeholder='Type here...' onChangeText={(text) => {setText(text)}}></TextInput>
       </View>
-      <FlatList
+      <MasonryList
         style={tw`w-full`}
         data = {filteredData}
         keyExtractor = {(item) => item.id}
         renderItem = {({item}) => <Note item={item} nav={navigation}/>}
-        numColumns = {3}
+        numColumns = {2}
         contentContainerStyle={tw`p-4`}
       />
       <TouchableOpacity style={tw`items-center justify-center pb-3`} onPress={async () => {await addNote({title : " ", content: ""+text});}}>
