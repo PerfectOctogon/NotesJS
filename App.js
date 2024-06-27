@@ -101,7 +101,9 @@ function DetailsScreen({route, navigation}){
   const [title, setTitle] = useState(note.title);
   const [text, setText] = useState(note.content);
   const [deleteNote] = useDeleteNoteMutation();
+  noteDelete = false;
   const deleteThisNote = () => {
+    noteDelete = true;
     deleteNote(note);
     navigation.popToTop();
   }
@@ -115,29 +117,29 @@ function DetailsScreen({route, navigation}){
         />
       </TouchableOpacity>
     });
-  }, [navigation]);
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // Prevent default behavior of leaving the screen
+      e.preventDefault();
+      // Save the note before leaving
+      if(!noteDelete)
+      {saveNote();}
+      // Manually trigger the default behavior
+      navigation.dispatch(e.data.action);
+    });
+
+    return unsubscribe;
+  }, [navigation, title, text]);
 
   saveNote = () => {
-    //updateNote({id : note.id, content : text, title : title});
-    navigation.popToTop();
-  }
-
-  updateContent = (text) => {
-    setText(text);
     updateNote({id : note.id, content : text, title : title});
+    //navigation.popToTop();
   }
-
-  updateTitle = (text) => {
-    setTitle(title)
-    updateNote({id : note.id, content : note.content, title : text});
-  }
-
 
   return(
     <ScrollView style={tw`flex-1 bg-[#2F0082] p-2 h-screen`} automaticallyAdjustKeyboardInsets={true}>
-      <TextInput style={tw`text-white bg-[#3d00a9]  w-full text-6 mb-5`} multiline={true} onChangeText={text => updateTitle(text)} placeholder='Type here'>{note.title}</TextInput>
-      <TextInput style={tw`text-white bg-[#3d00a9] w-full`} multiline={true} onChangeText={text => updateContent(text)} placeholder='Type here'>{note.content}</TextInput>
-      <TouchableOpacity style={tw`items-center pt-5`} onPress={saveNote}>
+      <TextInput style={tw`text-white bg-[#3d00a9]  w-full text-6 mb-5`} multiline={true} onChangeText={text => setTitle(text)} placeholder='Type here'>{note.title}</TextInput>
+      <TextInput style={tw`text-white bg-[#3d00a9] w-full`} multiline={true} onChangeText={text => setText(text)} placeholder='Type here'>{note.content}</TextInput>
+      <TouchableOpacity style={tw`items-center pt-5`} onPress={navigation.popToTop}>
         <Text style={tw`font-bold text-white`}>DONE</Text>
       </TouchableOpacity>
     </ScrollView>
